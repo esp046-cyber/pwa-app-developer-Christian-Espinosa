@@ -1,0 +1,20 @@
+# robots.txt for Christian Espinosa Portfolio
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://christianespinosa.dev/sitemap.xml
+
+# Crawl-delay for specific bots (optional)
+User-agent: Googlebot
+Crawl-delay: 0
+
+User-agent: Bingbot
+Crawl-delay: 0
+
+# Disallow specific directories if needed
+# User-agent: *
+# Disallow: /assets/
+# Disallow: /private/

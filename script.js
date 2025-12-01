@@ -163,12 +163,106 @@ backToTopBtn.addEventListener('click', () => {
 });
 
 // ====================================
-// Contact Form Handling
+// CRM Integration Functions
+// ====================================
+function syncContactToCRM(contactData) {
+    try {
+        // Get existing contacts from localStorage
+        const existingContacts = JSON.parse(localStorage.getItem('crm_contacts') || '[]');
+        
+        // Create new contact object
+        const newContact = {
+            id: Date.now().toString(),
+            name: contactData.name,
+            email: contactData.email,
+            subject: contactData.subject,
+            message: contactData.message,
+            source: 'Website Contact Form',
+            status: 'New',
+            priority: 'Medium',
+            createdAt: new Date().toISOString(),
+            lastActivity: new Date().toISOString()
+        };
+        
+        // Add to existing contacts
+        existingContacts.push(newContact);
+        
+        // Save back to localStorage
+        localStorage.setItem('crm_contacts', JSON.stringify(existingContacts));
+        
+        console.log('✅ Contact synced to CRM:', newContact);
+        
+        // Optional: Send to external CRM if you have one
+        // sendToExternalCRM(newContact);
+        
+        return true;
+    } catch (error) {
+        console.error('❌ Error syncing to CRM:', error);
+        return false;
+    }
+}
+
+function sendToExternalCRM(contactData) {
+    // Example function for sending to external CRM API
+    // Uncomment and modify if you have an external CRM service
+    
+    /*
+    fetch('YOUR_CRM_API_ENDPOINT', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer YOUR_API_TOKEN'
+        },
+        body: JSON.stringify({
+            name: contactData.name,
+            email: contactData.email,
+            subject: contactData.subject,
+            message: contactData.message,
+            source: 'Website Contact Form',
+            custom_fields: {
+                website_url: window.location.origin,
+                submission_date: contactData.createdAt
+            }
+        })
+    })
+    .then(response => response.json())
+    .then(data => console.log('✅ Sent to external CRM:', data))
+    .catch(error => console.error('❌ External CRM error:', error));
+    */
+}
+
+function getCRMStats() {
+    try {
+        const contacts = JSON.parse(localStorage.getItem('crm_contacts') || '[]');
+        const today = new Date().toISOString().split('T')[0];
+        
+        return {
+            total: contacts.length,
+            today: contacts.filter(c => c.createdAt.startsWith(today)).length,
+            thisWeek: contacts.filter(c => {
+                const contactDate = new Date(c.createdAt);
+                const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+                return contactDate >= weekAgo;
+            }).length,
+            byStatus: contacts.reduce((acc, contact) => {
+                acc[contact.status] = (acc[contact.status] || 0) + 1;
+                return acc;
+            }, {})
+        };
+    } catch (error) {
+        console.error('❌ Error getting CRM stats:', error);
+        return { total: 0, today: 0, thisWeek: 0, byStatus: {} };
+    }
+}
+
+// ====================================
+// Contact Form Handling (Enhanced with CRM)
 // ====================================
 const contactForm = document.getElementById('contactForm');
 const successMessage = document.getElementById('successMessage');
 const errorMessage = document.getElementById('errorMessage');
 
+// Enhanced form submission with CRM sync
 contactForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -203,6 +297,13 @@ contactForm.addEventListener('submit', async (e) => {
         
         if (!response.ok) throw new Error('Failed to send message');
         */
+        
+        // ✅ SYNC TO CRM (New functionality)
+        const crmSyncSuccess = syncContactToCRM(data);
+        
+        if (crmSyncSuccess) {
+            console.log('📊 CRM Stats:', getCRMStats());
+        }
         
         // Show success message
         successMessage.classList.remove('hidden');
@@ -678,6 +779,13 @@ function initFormValidation() {
             
             // Simulate form submission
             setTimeout(() => {
+                // ✅ SYNC TO CRM (New functionality)
+                const crmSyncSuccess = syncContactToCRM(data);
+                
+                if (crmSyncSuccess) {
+                    console.log('📊 CRM Stats:', getCRMStats());
+                }
+                
                 // Show success message
                 successMessage.classList.remove('hidden');
                 form.reset();
@@ -1123,4 +1231,5 @@ console.log('  • Dark/Light Mode Toggle');
 console.log('  • Lazy Loading Images');
 console.log('  • Form Validation');
 console.log('  • Performance Monitoring');
+console.log('  • CRM Integration ✅ NEW!');
 console.log('───────────────────────────────────────────────');
